@@ -34,7 +34,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   private final SparkMax f_motor = new SparkMax(11, MotorType.kBrushless);
   private final RelativeEncoder m_encoder = m_motor.getEncoder();
   private final DigitalInput m_limitSwitchLow = new DigitalInput(0);
-  
   private final ProfiledPIDController m_controller = new ProfiledPIDController(ElevatorConstants.kElevatorKp, ElevatorConstants.kElevatorKi, ElevatorConstants.kElevatorKd, new Constraints(ElevatorConstants.kMaxVelocity, ElevatorConstants.kMaxAcceleration));
 
 
@@ -45,17 +44,6 @@ public class ElevatorSubsystem extends SubsystemBase {
           ElevatorConstants.kElevatorkG,
           ElevatorConstants.kElevatorkV,
           ElevatorConstants.kElevatorkA);
-
-   /**
-   * The velocity of the elevator in meters per second.
-   *
-   * @return velocity in meters per second
-   */
-  public double getVelocityMetersPerSecond()
-  {
-    return ((m_encoder.getVelocity() / 60)/ ElevatorConstants.kElevatorGearing) *
-           (2 * Math.PI * ElevatorConstants.kElevatorDrumRadius);
-  }
 
   /**
    * Subsystem constructor
@@ -82,12 +70,17 @@ public class ElevatorSubsystem extends SubsystemBase {
    * @param goal the position to maintain
    */
   public void reachGoal(double goal)
-  {
-      double voltsOut = MathUtil.clamp(
-      m_controller.calculate(getHeightMeters(), goal) +
-      m_feedforward.calculateWithVelocities(getVelocityMetersPerSecond(),
+  {   
+      if (m_limitSwitchLow.get()) {
+        m_motor.set(0);
+      }
+      else {
+        double voltsOut = MathUtil.clamp(
+        m_controller.calculate(getHeightMeters(), goal) +
+        m_feedforward.calculateWithVelocities(getVelocityMetersPerSecond(),
                                             m_controller.getSetpoint().velocity), -7, 7);
-      m_motor.setVoltage(voltsOut);
+        m_motor.setVoltage(voltsOut);
+      }
   }
   
   /**
@@ -145,6 +138,17 @@ public class ElevatorSubsystem extends SubsystemBase {
     return run(() -> reachGoal(goal));
   }
 
+   /**
+   * The velocity of the elevator in meters per second.
+   *
+   * @return velocity in meters per second
+   */
+  public double getVelocityMetersPerSecond()
+  {
+    return ((m_encoder.getVelocity() / 60)/ ElevatorConstants.kElevatorGearing) *
+           (2 * Math.PI * ElevatorConstants.kElevatorDrumRadius);
+  }
+
   /**
    * Stop the control loop and motor output.
    */
@@ -164,7 +168,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   @Override
   public void periodic()
   {
-    // Put smart dashboard values here
+    SmartDashboard.putNumber("Encoder Value", m_encoder.getPosition());
+    SmartDashboard.putNumber("Height in meters", getHeightMeters());
   }
 }
 

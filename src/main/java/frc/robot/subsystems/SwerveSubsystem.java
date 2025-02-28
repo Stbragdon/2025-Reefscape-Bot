@@ -86,7 +86,6 @@ public class SwerveSubsystem extends SubsystemBase {
    *
    * @param velocity Velocity according to the field.
    */
-  
   public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity)
   {
     return run(() -> {

@@ -74,6 +74,12 @@ public class RobotContainer {
   private void configureBindings() {
     Command driveFieldOrientedAnglularVelocity = driveBase.driveFieldOriented(driveAngularVelocity);
     driveBase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
+    elevator.setDefaultCommand(elevator.setGoal(0));
+
+    // Add goals for the elevator (ElevatorSubsystem version) *Height is in meters/Read smartdashboard
+    operatorXbox.a().onTrue(elevator.setGoal(1));
+    operatorXbox.b().onTrue(elevator.setGoal(2));
+    operatorXbox.y().onTrue(elevator.setGoal(3));
   }
 
   /**
